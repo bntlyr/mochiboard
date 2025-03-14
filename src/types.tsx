@@ -32,13 +32,12 @@ export interface ChecklistItem {
   }
   
   export interface MochiProject {
-    notes: any
+    notes: Note[] // Assuming notes is an array of Note objects
     id: string
     title: string
     description: string
     createdAt: number
-    boards: KanbanBoard[]
-    // Notes removed from project level
+    boards: KanbanBoard[] // Assuming boards is an array of KanbanBoard objects
   }
   
   
