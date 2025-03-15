@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 export default function Home() {
   // Check if user is logged in (front-end only auth)
@@ -19,7 +20,12 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
           <div className="mb-8">
             <div className="w-24 h-24 bg-slate-300 rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-4xl">📋</span>
+              <Image
+                src="/mochilogo.png"
+                alt="Mochi Logo"
+                width={40}
+                height={40}
+              />
             </div>
           </div>
           <h1 className="text-5xl font-bold mb-4 text-slate-800">MochiBoard</h1>

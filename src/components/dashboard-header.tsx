@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { User, LogOut, Settings } from "lucide-react"
+import Image from "next/image"
 
 interface DashboardHeaderProps {
   user: { name?: string; email: string }
@@ -21,7 +22,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
     <header className="bg-white border-b border-slate-200 py-3 px-4 flex items-center justify-between">
       <div className="flex items-center">
         <div className="w-10 h-10 bg-slate-300 rounded-md flex items-center justify-center mr-3">
-          <span className="text-xl">📋</span>
+          <Image
+            src="/mochilogo.png"
+            alt="Mochi Logo"
+            width={40}
+            height={40}
+          />
         </div>
         <h1 className="text-xl font-bold text-slate-800">MochiBoard</h1>
       </div>
