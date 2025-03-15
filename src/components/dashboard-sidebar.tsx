@@ -14,7 +14,7 @@ export function DashboardSidebar({ activeView, setView }: DashboardSidebarProps)
       <div className="space-y-2">
         <Button
           variant={activeView === "boards" ? "default" : "ghost"}
-          className={`w-full justify-start ${activeView === "boards" ? "bg-mochi-100 text-mochi-700 hover:bg-mochi-200" : ""}`}
+          className={`w-full justify-start ${activeView === "boards" ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : ""}`}
           onClick={() => setView("boards")}
         >
           <LayoutGrid size={20} className="mr-0 md:mr-2" />

@@ -44,7 +44,6 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
       description: newProjectDescription,
       createdAt: Date.now(),
       boards: [],
-      notes: [],
     }
 
     const updatedProjects = [...projects, newProject]
@@ -81,8 +80,8 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
   return (
     <div className="h-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-800">Mochi Projects</h2>
-        <Button onClick={() => setIsAddingProject(true)} className="bg-mochi-500 hover:bg-mochi-600 text-white">
+        <h2 className="text-2xl font-bold text-slate-800">Mochi Projects</h2>
+        <Button onClick={() => setIsAddingProject(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
           <Plus size={16} className="mr-2" />
           New Project
         </Button>
@@ -95,7 +94,7 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
           </div>
           <h3 className="text-lg font-medium text-gray-700 mb-2">No Projects Yet</h3>
           <p className="text-gray-500 text-center mb-4">Create your first project to get started!</p>
-          <Button onClick={() => setIsAddingProject(true)} className="bg-mochi-500 hover:bg-mochi-600 text-white">
+          <Button onClick={() => setIsAddingProject(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
             <Plus size={16} className="mr-2" />
             Create Project
           </Button>
@@ -103,9 +102,9 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
-            <Card key={project.id} className="border border-slate-200 hover:border-mochi-300 transition-colors">
+            <Card key={project.id} className="border border-slate-200 hover:border-slate-300 transition-colors">
               <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
-                <h3 className="font-medium text-lg">{project.title}</h3>
+                <h3 className="font-bold text-lg">{project.title}</h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -132,19 +131,19 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center text-xs text-slate-500">
-                    <div className="w-3 h-3 bg-mochi-300 rounded-sm mr-1"></div>
+                    <div className="w-3 h-3 bg-slate-300 rounded-sm mr-1"></div>
                     {project.boards.length} {project.boards.length === 1 ? "Board" : "Boards"}
                   </div>
                   <div className="flex items-center text-xs text-slate-500">
                     <div className="w-3 h-3 bg-slate-300 rounded-sm mr-1"></div>
-                    {project.notes.length} {project.notes.length === 1 ? "Note" : "Notes"}
+                    {project.boards.reduce((total, board) => total + board.notes.length, 0)} Notes
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0">
                 <Button
                   variant="outline"
-                  className="w-full text-sm border-slate-200 hover:bg-mochi-50 hover:text-mochi-700"
+                  className="w-full text-sm border-slate-200 hover:bg-slate-50 hover:text-slate-700"
                   onClick={() => onSelectProject(project.id)}
                 >
                   Open Project

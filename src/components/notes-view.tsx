@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, MoreHorizontal, X, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Note } from "../types"
+import { StickyNote } from "@/components/icons"
 
 interface NotesViewProps {
   boardNotes: Note[]
@@ -22,8 +23,14 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   const [isAddingNote, setIsAddingNote] = useState(false)
   const [newNoteTitle, setNewNoteTitle] = useState("")
   const [newNoteContent, setNewNoteContent] = useState("")
-  const [newNoteColor, setNewNoteColor] = useState("bg-mochi-100")
+  const [newNoteColor, setNewNoteColor] = useState("bg-slate-100")
   const [isEditingNote, setIsEditingNote] = useState<Note | null>(null)
+
+  // Add a useEffect to sync the notes state with the boardNotes prop
+  // Add this after the state declarations
+  useEffect(() => {
+    setNotes(boardNotes)
+  }, [boardNotes])
 
   // Save notes back to parent component
   const saveNotes = (updatedNotes: Note[]) => {
@@ -47,7 +54,7 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
     // Reset form
     setNewNoteTitle("")
     setNewNoteContent("")
-    setNewNoteColor("bg-mochi-100")
+    setNewNoteColor("bg-slate-100")
     setIsAddingNote(false)
   }
 
@@ -65,12 +72,12 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   }
 
   const colorOptions = [
-    { value: "bg-mochi-100", label: "Teal" },
     { value: "bg-slate-100", label: "Gray" },
     { value: "bg-blue-100", label: "Blue" },
     { value: "bg-emerald-100", label: "Green" },
     { value: "bg-amber-100", label: "Amber" },
     { value: "bg-orange-100", label: "Orange" },
+    { value: "bg-rose-100", label: "Rose" },
   ]
 
   // Update the "No Notes Yet" section
@@ -78,8 +85,8 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
     return (
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-800">Notes for {boardTitle}</h2>
-          <Button onClick={() => setIsAddingNote(true)} className="bg-mochi-500 hover:bg-mochi-600 text-white">
+          <h2 className="text-2xl font-bold text-slate-800">Notes for {boardTitle}</h2>
+          <Button onClick={() => setIsAddingNote(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
             <Plus size={16} className="mr-2" />
             Add Note
           </Button>
@@ -91,7 +98,7 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
           </div>
           <h3 className="text-lg font-medium text-gray-700 mb-2">No Notes Yet</h3>
           <p className="text-gray-500 text-center mb-4">Create your first note for this board!</p>
-          <Button onClick={() => setIsAddingNote(true)} className="bg-mochi-500 hover:bg-mochi-600 text-white">
+          <Button onClick={() => setIsAddingNote(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
             <Plus size={16} className="mr-2" />
             Add Note
           </Button>
@@ -162,8 +169,8 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   return (
     <div className="h-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-800">Notes for {boardTitle}</h2>
-        <Button onClick={() => setIsAddingNote(true)} className="bg-mochi-500 hover:bg-mochi-600 text-white">
+        <h2 className="text-2xl font-bold text-slate-800">Notes for {boardTitle}</h2>
+        <Button onClick={() => setIsAddingNote(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
           <Plus size={16} className="mr-2" />
           Add Note
         </Button>
@@ -173,7 +180,7 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
         {notes.map((note) => (
           <Card key={note.id} className={`${note.color} border-0 shadow-sm hover:shadow transition-shadow`}>
             <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
-              <h3 className="font-medium">{note.title}</h3>
+              <h3 className="font-bold">{note.title}</h3>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -320,27 +327,6 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
-
-// StickyNote icon component
-function StickyNote({ size = 24, className = "" }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z" />
-      <path d="M15 3v6h6" />
-    </svg>
   )
 }
 

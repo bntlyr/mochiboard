@@ -36,10 +36,10 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-mochi-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md border border-slate-200 shadow-lg">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-mochi-300 rounded-lg mx-auto flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-slate-300 rounded-lg mx-auto flex items-center justify-center mb-4">
             <span className="text-2xl">📋</span>
           </div>
           <CardTitle className="text-2xl font-bold text-slate-800">Welcome Back</CardTitle>
@@ -58,7 +58,7 @@ export default function Login() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border-slate-200 focus:border-mochi-500 focus:ring-mochi-500"
+                className="border-slate-200 focus:border-slate-500 focus:ring-slate-500"
               />
             </div>
             <div className="space-y-2">
@@ -71,10 +71,10 @@ export default function Login() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="border-slate-200 focus:border-mochi-500 focus:ring-mochi-500"
+                className="border-slate-200 focus:border-slate-500 focus:ring-slate-500"
               />
             </div>
-            <Button type="submit" className="w-full bg-mochi-500 hover:bg-mochi-600 text-white py-2 rounded-md">
+            <Button type="submit" className="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded-md">
               Login
             </Button>
           </form>
@@ -82,7 +82,7 @@ export default function Login() {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-mochi-600 hover:underline">
+            <Link href="/signup" className="text-slate-600 hover:underline">
               Sign up
             </Link>
           </p>

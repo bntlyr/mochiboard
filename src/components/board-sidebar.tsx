@@ -62,7 +62,7 @@ export function BoardSidebar({
             <div
               key={board.id}
               className={`group flex items-center justify-between rounded-md p-2 cursor-pointer ${
-                activeBoard?.id === board.id ? "bg-mochi-100 text-mochi-700" : "hover:bg-slate-100"
+                activeBoard?.id === board.id ? "bg-slate-100 text-slate-700" : "hover:bg-slate-100"
               }`}
             >
               <div
@@ -73,7 +73,12 @@ export function BoardSidebar({
                 }}
               >
                 <LayoutGrid size={16} className="mr-2 flex-shrink-0" />
-                <span className="truncate">{board.title}</span>
+                <span className="truncate font-bold">{board.title}</span>
+                {board.notes.length > 0 && (
+                  <span className="ml-2 bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.5 text-xs">
+                    {board.notes.length}
+                  </span>
+                )}
               </div>
               <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button

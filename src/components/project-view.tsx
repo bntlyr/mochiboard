@@ -69,9 +69,18 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
   const handleBoardSelect = (boardId: string) => {
     if (!project) return
 
+    // Get a fresh reference to the selected board from the project
     const selectedBoard = project.boards.find((board) => board.id === boardId)
     if (selectedBoard) {
-      setActiveBoard(selectedBoard)
+      // Create a deep copy to ensure we're not sharing references
+      setActiveBoard({
+        ...selectedBoard,
+        columns: selectedBoard.columns.map((column) => ({
+          ...column,
+          cards: [...column.cards],
+        })),
+        notes: [...selectedBoard.notes],
+      })
     }
   }
 
@@ -102,9 +111,19 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
       notes: [],
     }
 
+    // Create a deep copy of the existing boards to prevent reference issues
+    const updatedBoards = project.boards.map((board) => ({
+      ...board,
+      columns: board.columns.map((column) => ({
+        ...column,
+        cards: [...column.cards],
+      })),
+      notes: [...board.notes],
+    }))
+
     const updatedProject = {
       ...project,
-      boards: [...project.boards, newBoard],
+      boards: [...updatedBoards, newBoard],
     }
 
     saveProject(updatedProject)
@@ -199,7 +218,7 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
           <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
             <ArrowLeft size={18} />
           </Button>
-          <h2 className="text-xl font-bold text-slate-800">{project.title}</h2>
+          <h2 className="text-2xl font-bold text-slate-800">{project.title}</h2>
         </div>
 
         <div className="flex items-center gap-2">
@@ -209,7 +228,7 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
                 variant={view === "board" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setView("board")}
-                className={view === "board" ? "bg-mochi-500 hover:bg-mochi-600" : ""}
+                className={view === "board" ? "bg-slate-500 hover:bg-slate-600" : ""}
               >
                 <LayoutGrid size={16} className="mr-2" />
                 Kanban Board
@@ -218,15 +237,10 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
                 variant={view === "notes" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setView("notes")}
-                className={view === "notes" ? "bg-mochi-500 hover:bg-mochi-600" : ""}
+                className={view === "notes" ? "bg-slate-500 hover:bg-slate-600" : ""}
               >
                 <StickyNote size={16} className="mr-2" />
                 Board Notes
-                {activeBoard.notes.length > 0 && (
-                  <span className="ml-1.5 bg-white bg-opacity-20 text-white rounded-full px-1.5 py-0.5 text-xs">
-                    {activeBoard.notes.length}
-                  </span>
-                )}
               </Button>
             </>
           )}
@@ -289,7 +303,7 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
               </div>
               <Button
                 onClick={() => handleBoardCreate("My First Board")}
-                className="bg-mochi-500 hover:bg-mochi-600 text-white"
+                className="bg-slate-500 hover:bg-slate-600 text-white"
               >
                 Create Board
               </Button>

@@ -14,18 +14,18 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-mochi-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
           <div className="mb-8">
-            <div className="w-24 h-24 bg-mochi-300 rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-24 h-24 bg-slate-300 rounded-lg flex items-center justify-center shadow-lg">
               <span className="text-4xl">📋</span>
             </div>
           </div>
           <h1 className="text-5xl font-bold mb-4 text-slate-800">MochiBoard</h1>
           <p className="text-xl mb-8 text-slate-600 max-w-md">Organize your tasks, notes, and projects in one place</p>
           <div className="flex gap-4">
-            <Button asChild className="bg-mochi-500 hover:bg-mochi-600 text-white px-8 py-6 rounded-md text-lg">
+            <Button asChild className="bg-slate-500 hover:bg-slate-600 text-white px-8 py-6 rounded-md text-lg">
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild className="bg-slate-600 hover:bg-slate-700 text-white px-8 py-6 rounded-md text-lg">

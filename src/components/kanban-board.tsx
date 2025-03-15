@@ -180,7 +180,7 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
-          <h2 className="text-xl font-bold text-slate-800">{board.title}</h2>
+          <h2 className="text-2xl font-bold text-slate-800">{board.title}</h2>
         </div>
         <Button variant="outline" size="sm" onClick={() => setIsAddingColumn(true)}>
           <Plus size={16} className="mr-2" />
@@ -219,7 +219,7 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                         />
                       </form>
                     ) : (
-                      <h3 className="font-medium text-gray-700">{column.title}</h3>
+                      <h3 className="font-bold text-gray-700">{column.title}</h3>
                     )}
                     <div className="flex items-center">
                       <Button
@@ -253,7 +253,7 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                               >
                                 <Card className="bg-white shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
                                   <CardHeader className="p-3 pb-0 flex flex-row items-start justify-between">
-                                    <h4 className="font-medium text-sm">{card.title}</h4>
+                                    <h4 className="font-bold text-sm">{card.title}</h4>
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -333,7 +333,7 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                         {showChecklistPreview && (
                           <div className="p-2 bg-slate-50 border border-slate-200 rounded-md">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className="w-4 h-4 bg-mochi-300 rounded-sm flex items-center justify-center">
+                              <div className="w-4 h-4 bg-slate-300 rounded-sm flex items-center justify-center">
                                 <span className="text-xs">✓</span>
                               </div>
                               <span className="text-sm font-medium">Checklist</span>

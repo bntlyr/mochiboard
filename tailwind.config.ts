@@ -1,12 +1,13 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: "class",  // Change from ["class"] to "class"
+  darkMode: "class",
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}", // Add this line to include our safelist file
     "*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
@@ -52,18 +53,18 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom MochiBoard colors (more neutral)
+        // Custom MochiBoard colors (direct hex values)
         mochi: {
-          50: "#f0f7fa",
-          100: "#e1eff5",
-          200: "#c3dfe9",
-          300: "#a4cfd9",
-          400: "#86bfc9",
-          500: "#67afb9",
-          600: "#528c94",
-          700: "#3e696f",
-          800: "#29464a",
-          900: "#152325",
+          "50": "#f0f7fa",
+          "100": "#e1eff5",
+          "200": "#c3dfe9",
+          "300": "#a4cfd9",
+          "400": "#86bfc9",
+          "500": "#67afb9",
+          "600": "#528c94",
+          "700": "#3e696f",
+          "800": "#29464a",
+          "900": "#152325",
         },
       },
       borderRadius: {
@@ -88,6 +89,7 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+}
 
-export default config;
+export default config
+

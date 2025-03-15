@@ -50,7 +50,7 @@ export function Checklist({ items, onUpdate }: ChecklistProps) {
             {completedCount}/{items.length}
           </div>
           <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-mochi-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-slate-500 transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}

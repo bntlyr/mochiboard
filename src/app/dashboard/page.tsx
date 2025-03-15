@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { ProjectsView } from "@/components/projects-view"
 import { ProjectView } from "@/components/project-view"
-import type { MochiProject } from "@/types"
+import type { KanbanBoard, MochiProject } from "@/types"
 
 export default function Dashboard() {
   const [user, setUser] = useState<{ name?: string; email: string } | null>(null)
@@ -26,15 +26,17 @@ export default function Dashboard() {
     if (!localStorage.getItem("mochiboard-projects")) {
       // Convert existing boards and notes to the new project structure
       const existingBoards = JSON.parse(localStorage.getItem("mochiboard-boards") || "[]")
-      const existingNotes = JSON.parse(localStorage.getItem("mochiboard-notes") || "[]")
 
+      // Create default project with existing boards
       const defaultProject: MochiProject = {
         id: `project-${Date.now()}`,
         title: "My First Project",
         description: "A collection of my boards and notes",
         createdAt: Date.now(),
-        boards: existingBoards,
-        notes: existingNotes,
+        boards: existingBoards.map((board: KanbanBoard) => ({
+          ...board,
+          notes: [], // Initialize with empty notes array
+        })),
       }
 
       localStorage.setItem("mochiboard-projects", JSON.stringify([defaultProject]))

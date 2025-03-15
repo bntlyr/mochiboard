@@ -20,7 +20,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   return (
     <header className="bg-white border-b border-slate-200 py-3 px-4 flex items-center justify-between">
       <div className="flex items-center">
-        <div className="w-10 h-10 bg-mochi-300 rounded-md flex items-center justify-center mr-3">
+        <div className="w-10 h-10 bg-slate-300 rounded-md flex items-center justify-center mr-3">
           <span className="text-xl">📋</span>
         </div>
         <h1 className="text-xl font-bold text-slate-800">MochiBoard</h1>
