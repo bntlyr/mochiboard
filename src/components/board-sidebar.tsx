@@ -170,7 +170,8 @@ export function BoardSidebar({
         </div>
       )}
 
-      {/* <Dialog open={isAddingBoard} onOpenChange={setIsAddingBoard}>
+      {/* Might delete since not needed */}
+      <Dialog open={isAddingBoard} onOpenChange={setIsAddingBoard}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Board</DialogTitle>
@@ -217,7 +218,7 @@ export function BoardSidebar({
             <Button onClick={handleEditBoard}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog> */}
+      </Dialog>
     </div>
   )
 }
