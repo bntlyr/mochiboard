@@ -104,10 +104,12 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
           {projects.map((project) => (
             <Card key={project.id} className="border border-slate-200 hover:border-slate-300 transition-colors">
               <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
-                <h3 className="font-bold text-lg">{project.title}</h3>
+                <h3 className="font-bold text-lg truncate max-w-[80%]" title={project.title}>
+                  {project.title}
+                </h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
                       <MoreHorizontal size={16} />
                     </Button>
                   </DropdownMenuTrigger>
@@ -124,7 +126,12 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
                 </DropdownMenu>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <p className="text-sm text-slate-600 mb-3">{project.description}</p>
+                <p
+                  className="text-sm text-slate-600 mb-3 line-clamp-2 overflow-hidden text-ellipsis"
+                  title={project.description}
+                >
+                  {project.description}
+                </p>
                 <div className="flex items-center text-xs text-slate-500 mb-3">
                   <Calendar size={14} className="mr-1" />
                   Created {formatDate(project.createdAt)}

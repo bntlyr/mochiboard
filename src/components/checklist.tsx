@@ -55,7 +55,7 @@ export function Checklist({ items, onUpdate }: ChecklistProps) {
         </div>
       )}
 
-      <div className="space-y-1.5">
+      <div className="space-y-1 relative">
         {items.map((item) => (
           <ChecklistItem
             key={item.id}

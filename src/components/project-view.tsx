@@ -218,7 +218,11 @@ export function ProjectView({ projectId, onBack }: ProjectViewProps) {
           <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
             <ArrowLeft size={18} />
           </Button>
-          <h2 className="text-2xl font-bold text-slate-800">{project.title}</h2>
+          {activeBoard ? (
+            <h2 className="text-2xl font-bold text-slate-800">{project.title}</h2>
+          ) : (
+            <h2 className="text-2xl font-bold text-slate-800">{project.title}</h2>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

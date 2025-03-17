@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Note } from "../types"
 import { StickyNote } from "@/components/icons"
+import { linkifyText } from "@/lib/utils"
 
 interface NotesViewProps {
   boardNotes: Note[]
@@ -27,7 +28,6 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   const [isEditingNote, setIsEditingNote] = useState<Note | null>(null)
 
   // Add a useEffect to sync the notes state with the boardNotes prop
-  // Add this after the state declarations
   useEffect(() => {
     setNotes(boardNotes)
   }, [boardNotes])
@@ -167,141 +167,84 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   }
 
   return (
-    <div className="h-full">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-slate-800">Notes for {boardTitle}</h2>
-        <Button onClick={() => setIsAddingNote(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
-          <Plus size={16} className="mr-2" />
-          Add Note
-        </Button>
-      </div>
+    <>
+      <div className="h-full">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-slate-800">Notes for {boardTitle}</h2>
+          <Button onClick={() => setIsAddingNote(true)} className="bg-slate-500 hover:bg-slate-600 text-white">
+            <Plus size={16} className="mr-2" />
+            Add Note
+          </Button>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {notes.map((note) => (
-          <Card key={note.id} className={`${note.color} border-0 shadow-sm hover:shadow transition-shadow`}>
-            <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
-              <h3 className="font-bold">{note.title}</h3>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditingNote(note)}>
-                    <Edit size={16} className="mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => deleteNote(note.id)}>
-                    <X size={16} className="mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <p className="whitespace-pre-wrap">{note.content}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {notes.map((note) => (
+            <Card key={note.id} className={`${note.color} border-0 shadow-sm hover:shadow transition-shadow`}>
+              <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
+                <h3 className="font-bold truncate max-w-[80%]" title={note.title}>
+                  {note.title}
+                </h3>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                      <MoreHorizontal size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setIsEditingNote(note)}>
+                      <Edit size={16} className="mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => deleteNote(note.id)}>
+                      <X size={16} className="mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <div className="overflow-hidden text-ellipsis line-clamp-4">{linkifyText(note.content)}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-      <Dialog open={isAddingNote} onOpenChange={(open) => setIsAddingNote(open)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Note</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="noteTitle" className="text-sm font-medium">
-                Title
-              </label>
-              <Input
-                id="noteTitle"
-                value={newNoteTitle}
-                onChange={(e) => setNewNoteTitle(e.target.value)}
-                placeholder="Note Title"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="noteContent" className="text-sm font-medium">
-                Content
-              </label>
-              <Textarea
-                id="noteContent"
-                value={newNoteContent}
-                onChange={(e) => setNewNoteContent(e.target.value)}
-                placeholder="Write your note here..."
-                rows={6}
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="noteColor" className="text-sm font-medium">
-                Color
-              </label>
-              <Select value={newNoteColor} onValueChange={setNewNoteColor}>
-                <SelectTrigger id="noteColor">
-                  <SelectValue placeholder="Select a color" />
-                </SelectTrigger>
-                <SelectContent>
-                  {colorOptions.map((color) => (
-                    <SelectItem key={color.value} value={color.value}>
-                      <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full ${color.value} mr-2`} />
-                        {color.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddingNote(false)}>
-              Cancel
-            </Button>
-            <Button onClick={addNote}>Add Note</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!isEditingNote} onOpenChange={(open) => !open && setIsEditingNote(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Note</DialogTitle>
-          </DialogHeader>
-          {isEditingNote && (
+        {/* Dialog for adding a note */}
+        <Dialog open={isAddingNote} onOpenChange={(open) => setIsAddingNote(open)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Note</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label htmlFor="editNoteTitle" className="text-sm font-medium">
+                <label htmlFor="noteTitle" className="text-sm font-medium">
                   Title
                 </label>
                 <Input
-                  id="editNoteTitle"
-                  value={isEditingNote.title}
-                  onChange={(e) => setIsEditingNote({ ...isEditingNote, title: e.target.value })}
+                  id="noteTitle"
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="Note Title"
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="editNoteContent" className="text-sm font-medium">
+                <label htmlFor="noteContent" className="text-sm font-medium">
                   Content
                 </label>
                 <Textarea
-                  id="editNoteContent"
-                  value={isEditingNote.content}
-                  onChange={(e) => setIsEditingNote({ ...isEditingNote, content: e.target.value })}
+                  id="noteContent"
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Write your note here..."
                   rows={6}
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="editNoteColor" className="text-sm font-medium">
+                <label htmlFor="noteColor" className="text-sm font-medium">
                   Color
                 </label>
-                <Select
-                  value={isEditingNote.color}
-                  onValueChange={(value) => setIsEditingNote({ ...isEditingNote, color: value })}
-                >
-                  <SelectTrigger id="editNoteColor">
+                <Select value={newNoteColor} onValueChange={setNewNoteColor}>
+                  <SelectTrigger id="noteColor">
                     <SelectValue placeholder="Select a color" />
                   </SelectTrigger>
                   <SelectContent>
@@ -317,16 +260,79 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
                 </Select>
               </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditingNote(null)}>
-              Cancel
-            </Button>
-            <Button onClick={updateNote}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddingNote(false)}>
+                Cancel
+              </Button>
+              <Button onClick={addNote}>Add Note</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog for editing a note */}
+        <Dialog open={!!isEditingNote} onOpenChange={(open) => !open && setIsEditingNote(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Note</DialogTitle>
+            </DialogHeader>
+            {isEditingNote && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label htmlFor="editNoteTitle" className="text-sm font-medium">
+                    Title
+                  </label>
+                  <Input
+                    id="editNoteTitle"
+                    value={isEditingNote.title}
+                    onChange={(e) => setIsEditingNote({ ...isEditingNote, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="editNoteContent" className="text-sm font-medium">
+                    Content
+                  </label>
+                  <Textarea
+                    id="editNoteContent"
+                    value={isEditingNote.content}
+                    onChange={(e) => setIsEditingNote({ ...isEditingNote, content: e.target.value })}
+                    rows={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="editNoteColor" className="text-sm font-medium">
+                    Color
+                  </label>
+                  <Select
+                    value={isEditingNote.color}
+                    onValueChange={(value) => setIsEditingNote({ ...isEditingNote, color: value })}
+                  >
+                    <SelectTrigger id="editNoteColor">
+                      <SelectValue placeholder="Select a color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colorOptions.map((color) => (
+                        <SelectItem key={color.value} value={color.value}>
+                          <div className="flex items-center">
+                            <div className={`w-4 h-4 rounded-full ${color.value} mr-2`} />
+                            {color.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditingNote(null)}>
+                Cancel
+              </Button>
+              <Button onClick={updateNote}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   )
 }
 

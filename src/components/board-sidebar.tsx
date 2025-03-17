@@ -32,6 +32,8 @@ export function BoardSidebar({
   const [isAddingBoard, setIsAddingBoard] = useState(false)
   const [isEditingBoard, setIsEditingBoard] = useState<KanbanBoard | null>(null)
   const [newBoardTitle, setNewBoardTitle] = useState("")
+  const [isInlineEditing, setIsInlineEditing] = useState<string | null>(null)
+  const [inlineEditTitle, setInlineEditTitle] = useState("")
 
   const handleCreateBoard = () => {
     if (!newBoardTitle.trim()) return
@@ -66,18 +68,63 @@ export function BoardSidebar({
               }`}
             >
               <div
-                className="flex items-center flex-1 overflow-hidden"
+                className="flex items-center flex-1 w-24 overflow-hidden"
                 onClick={() => {
-                  onBoardSelect(board.id)
-                  if (isMobile && onMobileClose) onMobileClose()
+                  if (!isInlineEditing) {
+                    onBoardSelect(board.id)
+                    if (isMobile && onMobileClose) onMobileClose()
+                  }
                 }}
               >
                 <LayoutGrid size={16} className="mr-2 flex-shrink-0" />
-                <span className="truncate font-bold">{board.title}</span>
-                {board.notes.length > 0 && (
-                  <span className="ml-2 bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.5 text-xs">
-                    {board.notes.length}
-                  </span>
+                {isInlineEditing === board.id ? (
+                  <form
+                    className="flex-1 min-w-0"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      if (inlineEditTitle.trim()) {
+                        onBoardEdit(board.id, inlineEditTitle)
+                        setIsInlineEditing(null)
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Input
+                      value={inlineEditTitle}
+                      onChange={(e) => setInlineEditTitle(e.target.value)}
+                      className="h-7 text-sm font-bold"
+                      autoFocus
+                      onBlur={() => {
+                        if (inlineEditTitle.trim()) {
+                          onBoardEdit(board.id, inlineEditTitle)
+                        }
+                        setIsInlineEditing(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setIsInlineEditing(null)
+                        }
+                      }}
+                    />
+                  </form>
+                ) : (
+                  <>
+                    <span
+                      className="truncate font-bold max-w-[65%] cursor-pointer hover:text-slate-600"
+                      onDoubleClick={(e) => {
+                        e.stopPropagation()
+                        setIsInlineEditing(board.id)
+                        setInlineEditTitle(board.title)
+                      }}
+                    >
+                      {board.title}
+                    </span>
+                    {board.notes.length > 0 && (
+                      <span className="ml-2 flex-shrink-0 bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.5 text-xs">
+                        {board.notes.length}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
               <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -123,7 +170,7 @@ export function BoardSidebar({
         </div>
       )}
 
-      <Dialog open={isAddingBoard} onOpenChange={setIsAddingBoard}>
+      {/* <Dialog open={isAddingBoard} onOpenChange={setIsAddingBoard}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Board</DialogTitle>
@@ -170,7 +217,7 @@ export function BoardSidebar({
             <Button onClick={handleEditBoard}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   )
 }

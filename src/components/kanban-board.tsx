@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { Plus, MoreHorizontal, X, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Checklist } from "@/components/checklist"
 import type { KanbanBoard as KanbanBoardType, KanbanCard, KanbanColumn } from "@/types"
+import { linkifyText } from "@/lib/utils"
 
 interface KanbanBoardProps {
   board: KanbanBoardType
@@ -28,6 +29,8 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
   const [isEditingCard, setIsEditingCard] = useState<KanbanCard | null>(null)
   const [editColumnId, setEditColumnId] = useState<string | null>(null)
   const [showChecklistPreview, setShowChecklistPreview] = useState(false)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editedTitle, setEditedTitle] = useState(board.title)
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result
@@ -176,11 +179,58 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
     onBoardChange(updatedBoard)
   }
 
+  useEffect(() => {
+    setEditedTitle(board.title)
+  }, [board.title])
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
-          <h2 className="text-2xl font-bold text-slate-800">{board.title}</h2>
+          {isEditingTitle ? (
+            <form
+              className="flex-1 mr-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (editedTitle.trim()) {
+                  const updatedBoard = { ...board, title: editedTitle }
+                  onBoardChange(updatedBoard)
+                  setIsEditingTitle(false)
+                }
+              }}
+            >
+              <Input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                className="h-9 text-xl font-bold"
+                autoFocus
+                onBlur={() => {
+                  if (editedTitle.trim()) {
+                    const updatedBoard = { ...board, title: editedTitle }
+                    onBoardChange(updatedBoard)
+                  }
+                  setIsEditingTitle(false)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setIsEditingTitle(false)
+                    setEditedTitle(board.title)
+                  }
+                }}
+              />
+            </form>
+          ) : (
+            <h2
+              className="text-2xl font-bold text-slate-800 cursor-pointer hover:text-slate-600 flex items-center"
+              onClick={() => {
+                setIsEditingTitle(true)
+                setEditedTitle(board.title)
+              }}
+            >
+              {board.title}
+              <Edit size={16} className="ml-2 opacity-50" />
+            </h2>
+          )}
         </div>
         <Button variant="outline" size="sm" onClick={() => setIsAddingColumn(true)}>
           <Plus size={16} className="mr-2" />
@@ -252,11 +302,11 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                                 className="mb-2"
                               >
                                 <Card className="bg-white shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
-                                  <CardHeader className="p-3 pb-0 flex flex-row items-start justify-between">
-                                    <h4 className="font-bold text-sm">{card.title}</h4>
+                                  <CardHeader className="pr-3 pl-3 flex flex-row items-start justify-between">
+                                    <h4 className="font-bold text-md truncate max-w-[80%]">{card.title}</h4>
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
                                           <MoreHorizontal size={14} />
                                         </Button>
                                       </DropdownMenuTrigger>
@@ -268,8 +318,10 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </CardHeader>
-                                  <CardContent className="p-3 pt-1">
-                                    <p className="text-xs text-gray-600">{card.description}</p>
+                                  <CardContent className="pr-3 pl-3">
+                                    <div className="text-sm text-gray-600 line-clamp-2 overflow-hidden text-ellipsis">
+                                      {linkifyText(card.description)}
+                                    </div>
 
                                     {card.checklist && card.checklist.length > 0 && (
                                       <div className="mt-2 pt-2 border-t border-slate-100">
