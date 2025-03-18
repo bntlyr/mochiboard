@@ -11,17 +11,21 @@ export interface Note {
   color: string
 }
 
+// Update the KanbanCard interface to include color
 export interface KanbanCard {
   id: string
   title: string
   description: string
   checklist?: ChecklistItem[]
+  color?: string
 }
 
+// Update the KanbanColumn interface to include color
 export interface KanbanColumn {
   id: string
   title: string
   cards: KanbanCard[]
+  color?: string
 }
 
 export interface KanbanBoard {

@@ -14,11 +14,35 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Checklist } from "@/components/checklist"
 import type { KanbanBoard as KanbanBoardType, KanbanCard, KanbanColumn } from "@/types"
 import { linkifyText } from "@/lib/utils"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface KanbanBoardProps {
   board: KanbanBoardType
   onBoardChange: (board: KanbanBoardType) => void
 }
+
+// Add these color options after the KanbanBoardProps interface
+const columnColorOptions = [
+  { value: "#e2e8f0", label: "Default" },
+  { value: "#fee2e2", label: "Red" },
+  { value: "#ffedd5", label: "Orange" },
+  { value: "#fef9c3", label: "Yellow" },
+  { value: "#dcfce7", label: "Green" },
+  { value: "#dbeafe", label: "Blue" },
+  { value: "#f3e8ff", label: "Purple" },
+  { value: "#fae8ff", label: "Pink" },
+]
+
+const cardColorOptions = [
+  { value: "default", label: "Default" }, // Changed from empty string to 'default'
+  { value: "#fee2e2", label: "Red" },
+  { value: "#ffedd5", label: "Orange" },
+  { value: "#fef9c3", label: "Yellow" },
+  { value: "#dcfce7", label: "Green" },
+  { value: "#dbeafe", label: "Blue" },
+  { value: "#f3e8ff", label: "Purple" },
+  { value: "#fae8ff", label: "Pink" },
+]
 
 export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
   const [isAddingCard, setIsAddingCard] = useState<string | null>(null)
@@ -244,7 +268,10 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
             {board.columns.map((column) => (
               <div key={column.id} className="flex-shrink-0 w-72">
                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-                  <div className="p-3 border-b border-slate-200 flex items-center justify-between">
+                  <div
+                    className="p-3 border-b border-slate-200 flex items-center justify-between"
+                    style={{ backgroundColor: column.color || "transparent" }}
+                  >
                     {editColumnId === column.id ? (
                       <form
                         onSubmit={(e) => {
@@ -269,7 +296,43 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                         />
                       </form>
                     ) : (
-                      <h3 className="font-bold text-gray-700">{column.title}</h3>
+                      <div className="flex items-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 mr-2 rounded-full overflow-hidden"
+                              style={{ backgroundColor: column.color || "#e2e8f0" }}
+                            >
+                              <span className="sr-only">Change column color</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuItem asChild disabled>
+                              <div className="font-medium px-2 py-1 text-xs text-slate-500">Column Color</div>
+                            </DropdownMenuItem>
+                            {columnColorOptions.map((color) => (
+                              <DropdownMenuItem
+                                key={color.value}
+                                onClick={() => {
+                                  const updatedBoard = { ...board }
+                                  const columnIndex = updatedBoard.columns.findIndex((col) => col.id === column.id)
+                                  if (columnIndex !== -1) {
+                                    updatedBoard.columns[columnIndex].color = color.value
+                                    onBoardChange(updatedBoard)
+                                  }
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: color.value }} />
+                                <span>{color.label}</span>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <h3 className="font-bold text-gray-700">{column.title}</h3>
+                      </div>
                     )}
                     <div className="flex items-center">
                       <Button
@@ -301,9 +364,69 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                                 {...provided.dragHandleProps}
                                 className="mb-2"
                               >
-                                <Card className="bg-white shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
-                                  <CardHeader className="pr-3 pl-3 flex flex-row items-start justify-between">
-                                    <h4 className="font-bold text-md truncate max-w-[80%]">{card.title}</h4>
+                                <Card
+                                  className="bg-white shadow-sm border border-slate-200 hover:border-slate-300 transition-colors"
+                                  style={{ backgroundColor: card.color || "transparent" }}
+                                >
+                                  <CardHeader
+                                    className="pr-3 pl-3 flex flex-row items-start justify-between"
+                                    style={{
+                                      backgroundColor: card.color ? `${card.color}` : "transparent",
+                                      borderTopLeftRadius: "0.5rem",
+                                      borderTopRightRadius: "0.5rem",
+                                    }}
+                                  >
+                                    <div className="flex items-center">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-4 w-4 mr-2 rounded-full overflow-hidden"
+                                            style={{ backgroundColor: card.color || "#e2e8f0" }}
+                                          >
+                                            <span className="sr-only">Change card color</span>
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                          <DropdownMenuItem asChild disabled>
+                                            <div className="font-medium px-2 py-1 text-xs text-slate-500">
+                                              Card Color
+                                            </div>
+                                          </DropdownMenuItem>
+                                          {cardColorOptions.map((color) => (
+                                            <DropdownMenuItem
+                                              key={color.value}
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                const updatedBoard = { ...board }
+                                                for (let i = 0; i < updatedBoard.columns.length; i++) {
+                                                  const cardIndex = updatedBoard.columns[i].cards.findIndex(
+                                                    (c) => c.id === card.id,
+                                                  )
+                                                  if (cardIndex !== -1) {
+                                                    updatedBoard.columns[i].cards[cardIndex].color =
+                                                      color.value === "default" ? "" : color.value
+                                                    onBoardChange(updatedBoard)
+                                                    break
+                                                  }
+                                                }
+                                              }}
+                                              className="flex items-center gap-2"
+                                            >
+                                              <div
+                                                className={`w-4 h-4 rounded-full`}
+                                                style={{
+                                                  backgroundColor: color.value === "default" ? "#ffffff" : color.value,
+                                                }}
+                                              />
+                                              <span>{color.label}</span>
+                                            </DropdownMenuItem>
+                                          ))}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                      <h4 className="font-bold text-md truncate max-w-[80%]">{card.title}</h4>
+                                    </div>
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
@@ -319,7 +442,7 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                                     </DropdownMenu>
                                   </CardHeader>
                                   <CardContent className="pr-3 pl-3">
-                                    <div className="text-sm text-gray-600 line-clamp-2 overflow-hidden text-ellipsis">
+                                    <div className="text-sm text-gray-600 line-clamp-2 overflow-hidden text-ellipsis whitespace-pre-line">
                                       {linkifyText(card.description)}
                                     </div>
 
@@ -518,6 +641,38 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
                     onUpdate={(items) => setIsEditingCard({ ...isEditingCard, checklist: items })}
                   />
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="cardColor" className="text-sm font-medium">
+                  Card Color
+                </label>
+                <Select
+                  value={isEditingCard.color || "default"}
+                  onValueChange={(value) =>
+                    setIsEditingCard({
+                      ...isEditingCard,
+                      color: value === "default" ? "" : value,
+                    })
+                  }
+                >
+                  <SelectTrigger id="cardColor">
+                    <SelectValue placeholder="Select a color" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cardColorOptions.map((color) => (
+                      <SelectItem key={color.value} value={color.value}>
+                        <div className="flex items-center">
+                          <div
+                            className={`w-4 h-4 rounded-full mr-2`}
+                            style={{ backgroundColor: color.value === "default" ? "#ffffff" : color.value }}
+                          />
+                          {color.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

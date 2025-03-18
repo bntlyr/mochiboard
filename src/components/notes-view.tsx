@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Plus, MoreHorizontal, X, Edit } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Plus, MoreHorizontal, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,6 +26,13 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   const [newNoteContent, setNewNoteContent] = useState("")
   const [newNoteColor, setNewNoteColor] = useState("bg-slate-100")
   const [isEditingNote, setIsEditingNote] = useState<Note | null>(null)
+  const [activeNote, setActiveNote] = useState<Note | null>(null)
+  const [editedActiveNoteTitle, setEditedActiveNoteTitle] = useState("")
+  const [editedActiveNoteContent, setEditedActiveNoteContent] = useState("")
+  const [isEditingActiveNote, setIsEditingActiveNote] = useState(false)
+
+  const titleInputRef = useRef<HTMLInputElement>(null)
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Add a useEffect to sync the notes state with the boardNotes prop
   useEffect(() => {
@@ -69,6 +76,46 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
   const deleteNote = (noteId: string) => {
     const updatedNotes = notes.filter((note) => note.id !== noteId)
     saveNotes(updatedNotes)
+
+    // Close the sticky note if it's the one being deleted
+    if (activeNote && activeNote.id === noteId) {
+      setActiveNote(null)
+    }
+  }
+
+  const handleNoteClick = (note: Note) => {
+    setActiveNote(note)
+    setEditedActiveNoteTitle(note.title)
+    setEditedActiveNoteContent(note.content)
+    setIsEditingActiveNote(true) // Always set to editing mode when opening
+  }
+
+  const handleSaveActiveNote = () => {
+    if (!activeNote) return
+
+    if (editedActiveNoteTitle.trim()) {
+      const updatedNote = {
+        ...activeNote,
+        title: editedActiveNoteTitle,
+        content: editedActiveNoteContent,
+      }
+
+      const updatedNotes = notes.map((note) => (note.id === activeNote.id ? updatedNote : note))
+
+      saveNotes(updatedNotes)
+      setActiveNote(updatedNote)
+    }
+  }
+
+  const handleChangeNoteColor = (noteId: string, color: string) => {
+    const updatedNotes = notes.map((note) => (note.id === noteId ? { ...note, color } : note))
+
+    saveNotes(updatedNotes)
+
+    // Update active note if it's the one being changed
+    if (activeNote && activeNote.id === noteId) {
+      setActiveNote({ ...activeNote, color })
+    }
   }
 
   const colorOptions = [
@@ -79,6 +126,13 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
     { value: "bg-orange-100", label: "Orange" },
     { value: "bg-rose-100", label: "Rose" },
   ]
+
+  // Focus on title input when editing starts
+  useEffect(() => {
+    if (isEditingActiveNote && titleInputRef.current) {
+      titleInputRef.current.focus()
+    }
+  }, [isEditingActiveNote])
 
   // Update the "No Notes Yet" section
   if (notes.length === 0) {
@@ -104,64 +158,72 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
           </Button>
         </div>
 
-        <Dialog open={isAddingNote} onOpenChange={(open) => setIsAddingNote(open)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Note</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="noteTitle" className="text-sm font-medium">
-                  Title
-                </label>
+        {/* Dialog for adding a note */}
+        {isAddingNote && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setIsAddingNote(false)}
+          >
+            <div
+              className={`${newNoteColor} rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ minHeight: "300px" }}
+            >
+              <div className="p-4 flex justify-between items-start border-b border-slate-200">
                 <Input
-                  id="noteTitle"
                   value={newNoteTitle}
                   onChange={(e) => setNewNoteTitle(e.target.value)}
+                  className="font-bold text-lg bg-transparent border-slate-300"
                   placeholder="Note Title"
+                  autoFocus
                 />
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild disabled>
+                        <div className="font-medium px-2 py-1 text-xs text-slate-500">Change Color</div>
+                      </DropdownMenuItem>
+                      {colorOptions.map((color) => (
+                        <DropdownMenuItem
+                          key={color.value}
+                          onClick={() => setNewNoteColor(color.value)}
+                          className="flex items-center gap-2"
+                        >
+                          <div className={`w-4 h-4 rounded-full ${color.value}`} />
+                          <span>{color.label}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="ghost" size="sm" onClick={() => setIsAddingNote(false)} className="h-8 w-8 p-0">
+                    <X size={16} />
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="noteContent" className="text-sm font-medium">
-                  Content
-                </label>
+              <div className="flex-1 p-4 overflow-auto">
                 <Textarea
-                  id="noteContent"
                   value={newNoteContent}
                   onChange={(e) => setNewNoteContent(e.target.value)}
+                  className="min-h-[200px] bg-transparent border-slate-300 resize-none"
                   placeholder="Write your note here..."
-                  rows={6}
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="noteColor" className="text-sm font-medium">
-                  Color
-                </label>
-                <Select value={newNoteColor} onValueChange={setNewNoteColor}>
-                  <SelectTrigger id="noteColor">
-                    <SelectValue placeholder="Select a color" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {colorOptions.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center">
-                          <div className={`w-4 h-4 rounded-full ${color.value} mr-2`} />
-                          {color.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="p-4 border-t border-slate-200 flex justify-end">
+                <Button onClick={() => setIsAddingNote(false)} variant="outline" className="mr-2">
+                  Cancel
+                </Button>
+                <Button onClick={addNote} disabled={!newNoteTitle.trim()}>
+                  Add Note
+                </Button>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddingNote(false)}>
-                Cancel
-              </Button>
-              <Button onClick={addNote}>Add Note</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </div>
     )
   }
@@ -179,97 +241,210 @@ export function NotesView({ boardNotes, onNotesChange, boardTitle }: NotesViewPr
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {notes.map((note) => (
-            <Card key={note.id} className={`${note.color} border-0 shadow-sm hover:shadow transition-shadow`}>
+            <Card
+              key={note.id}
+              className={`${note.color} border-0 shadow-sm hover:shadow transition-shadow cursor-pointer`}
+              onClick={() => handleNoteClick(note)}
+            >
               <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
                 <h3 className="font-bold truncate max-w-[80%]" title={note.title}>
                   {note.title}
                 </h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal size={16} />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setIsEditingNote(note)}>
-                      <Edit size={16} className="mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => deleteNote(note.id)}>
-                      <X size={16} className="mr-2" />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteNote(note.id)
+                      }}
+                    >
+                      <Trash2 size={16} className="mr-2" />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </CardHeader>
               <CardContent className="p-4 pt-2">
-                <div className="overflow-hidden text-ellipsis line-clamp-4">{linkifyText(note.content)}</div>
+                <div className="overflow-hidden text-ellipsis line-clamp-4 whitespace-pre-line">
+                  {linkifyText(note.content)}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Dialog for adding a note */}
-        <Dialog open={isAddingNote} onOpenChange={(open) => setIsAddingNote(open)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Note</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="noteTitle" className="text-sm font-medium">
-                  Title
-                </label>
+        {/* Sticky Note Modal */}
+        {activeNote && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => {
+              // Save any changes before closing
+              if (isEditingActiveNote) {
+                handleSaveActiveNote()
+              }
+              setActiveNote(null)
+            }}
+          >
+            <div
+              className={`${activeNote.color} rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ minHeight: "300px" }}
+            >
+              <div className="p-4 flex justify-between items-start border-b border-slate-200">
                 <Input
-                  id="noteTitle"
-                  value={newNoteTitle}
-                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  ref={titleInputRef}
+                  value={editedActiveNoteTitle}
+                  onChange={(e) => setEditedActiveNoteTitle(e.target.value)}
+                  className="font-bold text-lg bg-transparent border-slate-300"
                   placeholder="Note Title"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      contentTextareaRef.current?.focus()
+                    }
+                  }}
                 />
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => deleteNote(activeNote.id)}>
+                        <Trash2 size={16} className="mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild disabled>
+                        <div className="font-medium px-2 py-1 text-xs text-slate-500">Change Color</div>
+                      </DropdownMenuItem>
+                      {colorOptions.map((color) => (
+                        <DropdownMenuItem
+                          key={color.value}
+                          onClick={() => handleChangeNoteColor(activeNote.id, color.value)}
+                          className="flex items-center gap-2"
+                        >
+                          <div className={`w-4 h-4 rounded-full ${color.value}`} />
+                          <span>{color.label}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      handleSaveActiveNote()
+                      setActiveNote(null)
+                    }}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="noteContent" className="text-sm font-medium">
-                  Content
-                </label>
+              <div className="flex-1 p-4 overflow-auto">
                 <Textarea
-                  id="noteContent"
-                  value={newNoteContent}
-                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  ref={contentTextareaRef}
+                  value={editedActiveNoteContent}
+                  onChange={(e) => setEditedActiveNoteContent(e.target.value)}
+                  className="min-h-[200px] bg-transparent border-slate-300 resize-none"
                   placeholder="Write your note here..."
-                  rows={6}
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="noteColor" className="text-sm font-medium">
-                  Color
-                </label>
-                <Select value={newNoteColor} onValueChange={setNewNoteColor}>
-                  <SelectTrigger id="noteColor">
-                    <SelectValue placeholder="Select a color" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {colorOptions.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center">
-                          <div className={`w-4 h-4 rounded-full ${color.value} mr-2`} />
-                          {color.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="p-4 border-t border-slate-200 flex justify-end">
+                <Button
+                  onClick={() => {
+                    handleSaveActiveNote()
+                    setActiveNote(null)
+                  }}
+                  className="bg-slate-500 hover:bg-slate-600 text-white"
+                >
+                  Done
+                </Button>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddingNote(false)}>
-                Cancel
-              </Button>
-              <Button onClick={addNote}>Add Note</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
 
-        {/* Dialog for editing a note */}
+        {/* Dialog for adding a note */}
+        {isAddingNote && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setIsAddingNote(false)}
+          >
+            <div
+              className={`${newNoteColor} rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ minHeight: "300px" }}
+            >
+              <div className="p-4 flex justify-between items-start border-b border-slate-200">
+                <Input
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  className="font-bold text-lg bg-transparent border-slate-300"
+                  placeholder="Note Title"
+                  autoFocus
+                />
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild disabled>
+                        <div className="font-medium px-2 py-1 text-xs text-slate-500">Change Color</div>
+                      </DropdownMenuItem>
+                      {colorOptions.map((color) => (
+                        <DropdownMenuItem
+                          key={color.value}
+                          onClick={() => setNewNoteColor(color.value)}
+                          className="flex items-center gap-2"
+                        >
+                          <div className={`w-4 h-4 rounded-full ${color.value}`} />
+                          <span>{color.label}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="ghost" size="sm" onClick={() => setIsAddingNote(false)} className="h-8 w-8 p-0">
+                    <X size={16} />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 p-4 overflow-auto">
+                <Textarea
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  className="min-h-[200px] bg-transparent border-slate-300 resize-none"
+                  placeholder="Write your note here..."
+                />
+              </div>
+              <div className="p-4 border-t border-slate-200 flex justify-end">
+                <Button onClick={() => setIsAddingNote(false)} variant="outline" className="mr-2">
+                  Cancel
+                </Button>
+                <Button onClick={addNote} disabled={!newNoteTitle.trim()}>
+                  Add Note
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dialog for editing a note (keeping this as a fallback) */}
         <Dialog open={!!isEditingNote} onOpenChange={(open) => !open && setIsEditingNote(null)}>
           <DialogContent>
             <DialogHeader>

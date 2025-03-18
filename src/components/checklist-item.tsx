@@ -2,10 +2,8 @@
 
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { linkifyText } from "@/lib/utils"
 
 export interface ChecklistItemProps {
   id: string
@@ -27,7 +25,9 @@ export function ChecklistItem({ id, text, checked, onUpdate, onDelete }: Checkli
   }
 
   return (
-    <div className="group flex min-w-0 py-1 items-center"> {/* Ensure vertical alignment */}
+    <div className="group flex min-w-0 py-1 items-center">
+      {" "}
+      {/* Ensure vertical alignment */}
       <div className="flex-shrink-0 pt-0.5 pr-2">
         <Checkbox
           id={`checklist-item-${id}`}
@@ -36,20 +36,79 @@ export function ChecklistItem({ id, text, checked, onUpdate, onDelete }: Checkli
           className="h-4 w-4" // Explicit height and width for the checkbox
         />
       </div>
-
       {isEditing ? (
         <div className="flex-1 min-w-0">
-          <Input
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            className="h-7 text-sm w-full"
-            autoFocus
+          <div className="bg-white/80 rounded border border-slate-200 mb-1 flex items-center p-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => document.execCommand("bold")}
+              title="Bold (Ctrl+B)"
+            >
+              <span className="font-bold text-xs">B</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => document.execCommand("italic")}
+              title="Italic (Ctrl+I)"
+            >
+              <span className="italic text-xs">I</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => document.execCommand("underline")}
+              title="Underline (Ctrl+U)"
+            >
+              <span className="underline text-xs">U</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => document.execCommand("strikeThrough")}
+              title="Strikethrough (Ctrl+Shift+S)"
+            >
+              <span className="line-through text-xs">S</span>
+            </Button>
+          </div>
+          <div
+            contentEditable
+            className="h-7 text-sm w-full border border-input bg-background px-3 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-400"
+            onInput={(e) => setEditText(e.currentTarget.innerHTML)}
+            dangerouslySetInnerHTML={{ __html: editText }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
+                e.preventDefault()
                 handleSave()
               } else if (e.key === "Escape") {
                 setIsEditing(false)
                 setEditText(text)
+              } else if (e.ctrlKey) {
+                switch (e.key) {
+                  case "b":
+                    e.preventDefault()
+                    document.execCommand("bold")
+                    break
+                  case "i":
+                    e.preventDefault()
+                    document.execCommand("italic")
+                    break
+                  case "u":
+                    e.preventDefault()
+                    document.execCommand("underline")
+                    break
+                  case "S":
+                    if (e.shiftKey) {
+                      e.preventDefault()
+                      document.execCommand("strikeThrough")
+                    }
+                    break
+                }
               }
             }}
             onBlur={handleSave}
@@ -62,10 +121,9 @@ export function ChecklistItem({ id, text, checked, onUpdate, onDelete }: Checkli
           onDoubleClick={() => setIsEditing(true)}
           title={text}
         >
-          <div className="break-words overflow-wrap-anywhere pr-6">{linkifyText(text)}</div>
+          <div className="break-words overflow-wrap-anywhere pr-6" dangerouslySetInnerHTML={{ __html: text }} />
         </label>
       )}
-
       <Button
         variant="ghost"
         size="icon"
@@ -77,3 +135,4 @@ export function ChecklistItem({ id, text, checked, onUpdate, onDelete }: Checkli
     </div>
   )
 }
+

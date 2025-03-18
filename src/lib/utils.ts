@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Function to detect URLs in text and convert them to clickable links
+// Update the linkifyText function to preserve newlines
 export function linkifyText(text: string): React.ReactNode[] {
   if (!text) return [text]
 
@@ -20,9 +20,15 @@ export function linkifyText(text: string): React.ReactNode[] {
     matches.push(match[0])
   }
 
-  // If no URLs found, return the original text
+  // If no URLs found, return the original text with newlines preserved
   if (matches.length === 0) {
-    return [text]
+    // Split by newlines and create an array of text and <br /> elements
+    return text.split("\n").reduce((result: React.ReactNode[], line, i, arr) => {
+      if (i < arr.length - 1) {
+        return [...result, line, React.createElement("br", { key: `br-${i}` })]
+      }
+      return [...result, line]
+    }, [])
   }
 
   // Split the text by URLs and create React nodes
@@ -32,9 +38,16 @@ export function linkifyText(text: string): React.ReactNode[] {
   matches.forEach((url) => {
     const index = text.indexOf(url, lastIndex)
 
-    // Add text before the URL
+    // Add text before the URL (with newlines preserved)
     if (index > lastIndex) {
-      result.push(text.substring(lastIndex, index))
+      const textBefore = text.substring(lastIndex, index)
+      const textWithBreaks = textBefore.split("\n").reduce((acc: React.ReactNode[], line, i, arr) => {
+        if (i < arr.length - 1) {
+          return [...acc, line, React.createElement("br", { key: `br-before-${i}-${index}` })]
+        }
+        return [...acc, line]
+      }, [])
+      result.push(...textWithBreaks)
     }
 
     // Add the URL as a link
@@ -57,9 +70,16 @@ export function linkifyText(text: string): React.ReactNode[] {
     lastIndex = index + url.length
   })
 
-  // Add any remaining text
+  // Add any remaining text (with newlines preserved)
   if (lastIndex < text.length) {
-    result.push(text.substring(lastIndex))
+    const textAfter = text.substring(lastIndex)
+    const textWithBreaks = textAfter.split("\n").reduce((acc: React.ReactNode[], line, i, arr) => {
+      if (i < arr.length - 1) {
+        return [...acc, line, React.createElement("br", { key: `br-after-${i}-${lastIndex}` })]
+      }
+      return [...acc, line]
+    }, [])
+    result.push(...textWithBreaks)
   }
 
   return result
