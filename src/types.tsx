@@ -33,13 +33,16 @@ export interface KanbanBoard {
   title: string
   columns: KanbanColumn[]
   notes: Note[] // Notes are at the board level
+  deadline?: number // Add deadline field to boards
 }
 
+// Update the MochiProject interface to include a deadline field
 export interface MochiProject {
   id: string
   title: string
   description: string
   createdAt: number
+  deadline?: number // Optional timestamp for the project deadline
   boards: KanbanBoard[] // Each board has its own notes
 }
 

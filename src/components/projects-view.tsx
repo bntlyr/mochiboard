@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, MoreHorizontal, Calendar, Clipboard, Edit, Trash2 } from "lucide-react"
+import { Plus, MoreHorizontal, CalendarIcon, Clipboard, Edit, Trash2, CalendarClock, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,6 +9,33 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { MochiProject } from "../types"
+import { cn } from "@/lib/utils"
+import { NotificationService } from "@/lib/notification-service"
+
+// Custom date formatting function to avoid date-fns dependency
+function formatDateString(date: Date, includeTime = false): string {
+  const options: Intl.DateTimeFormatOptions = includeTime
+    ? {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }
+    : {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+
+  return new Date(date).toLocaleString("en-US", options)
+}
+
+// Helper function to format time for input value
+function formatTimeForInput(date: Date): string {
+  return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`
+}
 
 interface ProjectsViewProps {
   onSelectProject: (projectId: string) => void
@@ -20,6 +47,11 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
   const [isEditingProject, setIsEditingProject] = useState<MochiProject | null>(null)
   const [newProjectTitle, setNewProjectTitle] = useState("")
   const [newProjectDescription, setNewProjectDescription] = useState("")
+  const [newProjectDeadline, setNewProjectDeadline] = useState<Date | undefined>(undefined)
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [isEditDatePickerOpen, setIsEditDatePickerOpen] = useState(false)
+  const [timePickerValue, setTimePickerValue] = useState("12:00")
+  const [editTimePickerValue, setEditTimePickerValue] = useState("12:00")
 
   useEffect(() => {
     const storedProjects = localStorage.getItem("mochiboard-projects")
@@ -35,6 +67,24 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
     }
   }, [projects])
 
+  // Set initial time value when deadline is set
+  useEffect(() => {
+    if (newProjectDeadline) {
+      setTimePickerValue(formatTimeForInput(newProjectDeadline))
+    } else {
+      setTimePickerValue("12:00")
+    }
+  }, [newProjectDeadline])
+
+  // Set initial edit time value when editing project
+  useEffect(() => {
+    if (isEditingProject?.deadline) {
+      setEditTimePickerValue(formatTimeForInput(new Date(isEditingProject.deadline)))
+    } else {
+      setEditTimePickerValue("12:00")
+    }
+  }, [isEditingProject])
+
   const addProject = () => {
     if (!newProjectTitle.trim()) return
 
@@ -43,15 +93,22 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
       title: newProjectTitle,
       description: newProjectDescription,
       createdAt: Date.now(),
+      deadline: newProjectDeadline ? newProjectDeadline.getTime() : undefined,
       boards: [],
     }
 
     const updatedProjects = [...projects, newProject]
     setProjects(updatedProjects)
 
+    // Schedule notifications if there's a deadline
+    if (newProject.deadline) {
+      NotificationService.scheduleDeadlineReminder(newProject.title, newProject.deadline, "project")
+    }
+
     // Reset form
     setNewProjectTitle("")
     setNewProjectDescription("")
+    setNewProjectDeadline(undefined)
     setIsAddingProject(false)
   }
 
@@ -61,6 +118,12 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
     const updatedProjects = projects.map((project) => (project.id === isEditingProject.id ? isEditingProject : project))
 
     setProjects(updatedProjects)
+
+    // Schedule notifications if there's a deadline
+    if (isEditingProject.deadline) {
+      NotificationService.scheduleDeadlineReminder(isEditingProject.title, isEditingProject.deadline, "project")
+    }
+
     setIsEditingProject(null)
   }
 
@@ -69,12 +132,32 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
     setProjects(updatedProjects)
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+  const formatDate = (timestamp: number, includeTime = false) => {
+    return formatDateString(new Date(timestamp), includeTime)
+  }
+
+  const handleTimeChange = (timeString: string) => {
+    if (!newProjectDeadline) return
+
+    const [hours, minutes] = timeString.split(":").map(Number)
+    const newDate = new Date(newProjectDeadline)
+    newDate.setHours(hours, minutes)
+    setNewProjectDeadline(newDate)
+    setTimePickerValue(timeString)
+  }
+
+  const handleEditTimeChange = (timeString: string) => {
+    if (!isEditingProject || !isEditingProject.deadline) return
+
+    const [hours, minutes] = timeString.split(":").map(Number)
+    const newDate = new Date(isEditingProject.deadline)
+    newDate.setHours(hours, minutes)
+
+    setIsEditingProject({
+      ...isEditingProject,
+      deadline: newDate.getTime(),
     })
+    setEditTimePickerValue(timeString)
   }
 
   return (
@@ -133,9 +216,15 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
                   {project.description}
                 </p>
                 <div className="flex items-center text-xs text-slate-500 mb-3">
-                  <Calendar size={14} className="mr-1" />
+                  <CalendarIcon size={14} className="mr-1" />
                   Created {formatDate(project.createdAt)}
                 </div>
+                {project.deadline && (
+                  <div className="flex items-center text-xs text-slate-500 mb-3">
+                    <CalendarClock size={14} className="mr-1" />
+                    Deadline: {formatDate(project.deadline, true)}
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center text-xs text-slate-500">
                     <div className="w-3 h-3 bg-slate-300 rounded-sm mr-1"></div>
@@ -161,6 +250,7 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
         </div>
       )}
 
+      {/* Add Project Dialog */}
       <Dialog open={isAddingProject} onOpenChange={setIsAddingProject}>
         <DialogContent>
           <DialogHeader>
@@ -190,6 +280,36 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
                 rows={3}
               />
             </div>
+            <div className="space-y-2">
+              <label htmlFor="projectDeadline" className="text-sm font-medium">
+                Deadline (optional)
+              </label>
+              <div className="flex flex-col space-y-2">
+                <Button
+                  id="projectDeadline"
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !newProjectDeadline && "text-muted-foreground",
+                  )}
+                  onClick={() => setIsDatePickerOpen(true)}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {newProjectDeadline ? formatDateString(newProjectDeadline, true) : <span>Pick a deadline</span>}
+                </Button>
+                {newProjectDeadline && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setNewProjectDeadline(undefined)}
+                    className="w-fit"
+                  >
+                    Clear Deadline
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddingProject(false)}>
@@ -200,6 +320,76 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
         </DialogContent>
       </Dialog>
 
+      {/* Date Picker Dialog for New Project */}
+      <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Deadline</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="mx-auto">
+              <input
+                type="date"
+                className="w-full p-2 border rounded mb-4"
+                value={
+                  newProjectDeadline
+                    ? new Date(newProjectDeadline.getTime() - newProjectDeadline.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const date = new Date(e.target.value)
+                    if (newProjectDeadline) {
+                      date.setHours(newProjectDeadline.getHours(), newProjectDeadline.getMinutes())
+                    } else {
+                      date.setHours(12, 0)
+                      setTimePickerValue("12:00")
+                    }
+                    setNewProjectDeadline(date)
+                  } else {
+                    setNewProjectDeadline(undefined)
+                  }
+                }}
+              />
+            </div>
+            {newProjectDeadline && (
+              <div className="mt-6">
+                <div className="flex items-center mb-2">
+                  <Clock size={16} className="mr-2 text-slate-500" />
+                  <label htmlFor="deadlineTime" className="text-sm font-medium">
+                    Set Time
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="deadlineTime"
+                    type="time"
+                    className="flex-1 p-2 border rounded"
+                    value={timePickerValue}
+                    onChange={(e) => handleTimeChange(e.target.value)}
+                  />
+                  <div className="text-sm text-slate-500">
+                    {newProjectDeadline && formatDateString(newProjectDeadline, true).split(" at ")[1]}
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Current deadline: {formatDateString(newProjectDeadline, true)}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDatePickerOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setIsDatePickerOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Project Dialog */}
       <Dialog open={!!isEditingProject} onOpenChange={(open) => !open && setIsEditingProject(null)}>
         <DialogContent>
           <DialogHeader>
@@ -228,6 +418,40 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
                   rows={3}
                 />
               </div>
+              <div className="space-y-2">
+                <label htmlFor="editProjectDeadline" className="text-sm font-medium">
+                  Deadline
+                </label>
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    id="editProjectDeadline"
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !isEditingProject.deadline && "text-muted-foreground",
+                    )}
+                    onClick={() => setIsEditDatePickerOpen(true)}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {isEditingProject.deadline ? (
+                      formatDateString(new Date(isEditingProject.deadline), true)
+                    ) : (
+                      <span>Pick a deadline</span>
+                    )}
+                  </Button>
+                  {isEditingProject.deadline && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingProject({ ...isEditingProject, deadline: undefined })}
+                      className="w-fit"
+                    >
+                      Clear Deadline
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -238,6 +462,87 @@ export function ProjectsView({ onSelectProject }: ProjectsViewProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Date Picker Dialog for Edit Project */}
+      {isEditingProject && (
+        <Dialog open={isEditDatePickerOpen} onOpenChange={setIsEditDatePickerOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Select Deadline</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="mx-auto">
+                <input
+                  type="date"
+                  className="w-full p-2 border rounded mb-4"
+                  value={
+                    isEditingProject.deadline
+                      ? new Date(
+                          isEditingProject.deadline - new Date(isEditingProject.deadline).getTimezoneOffset() * 60000,
+                        )
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const date = new Date(e.target.value)
+                      if (isEditingProject.deadline) {
+                        const currentTime = new Date(isEditingProject.deadline)
+                        date.setHours(currentTime.getHours(), currentTime.getMinutes())
+                      } else {
+                        date.setHours(12, 0)
+                        setEditTimePickerValue("12:00")
+                      }
+                      setIsEditingProject({
+                        ...isEditingProject,
+                        deadline: date.getTime(),
+                      })
+                    } else {
+                      setIsEditingProject({
+                        ...isEditingProject,
+                        deadline: undefined,
+                      })
+                    }
+                  }}
+                />
+              </div>
+              {isEditingProject.deadline && (
+                <div className="mt-6">
+                  <div className="flex items-center mb-2">
+                    <Clock size={16} className="mr-2 text-slate-500" />
+                    <label htmlFor="editDeadlineTime" className="text-sm font-medium">
+                      Set Time
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="editDeadlineTime"
+                      type="time"
+                      className="flex-1 p-2 border rounded"
+                      value={editTimePickerValue}
+                      onChange={(e) => handleEditTimeChange(e.target.value)}
+                    />
+                    <div className="text-sm text-slate-500">
+                      {isEditingProject.deadline &&
+                        formatDateString(new Date(isEditingProject.deadline), true).split(" at ")[1]}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500">
+                    Current deadline: {formatDateString(new Date(isEditingProject.deadline), true)}
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDatePickerOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsEditDatePickerOpen(false)}>Done</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

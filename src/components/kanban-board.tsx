@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
-import { Plus, MoreHorizontal, X, Edit } from "lucide-react"
+import { Plus, MoreHorizontal, X, Edit, CalendarClock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -43,6 +43,24 @@ const cardColorOptions = [
   { value: "#f3e8ff", label: "Purple" },
   { value: "#fae8ff", label: "Pink" },
 ]
+
+// In the KanbanBoard component, add a new function to format dates
+const formatDate = (timestamp: number, includeTime = false) => {
+  const options: Intl.DateTimeFormatOptions = includeTime
+    ? {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }
+    : {
+        month: "short",
+        day: "numeric",
+      }
+
+  return new Date(timestamp).toLocaleString("en-US", options)
+}
 
 export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
   const [isAddingCard, setIsAddingCard] = useState<string | null>(null)
@@ -254,6 +272,12 @@ export function KanbanBoard({ board, onBoardChange }: KanbanBoardProps) {
               {board.title}
               <Edit size={16} className="ml-2 opacity-50" />
             </h2>
+          )}
+          {board.deadline && (
+            <div className="flex items-center text-sm text-slate-600 mt-1">
+              <CalendarClock size={14} className="mr-1" />
+              Due: {formatDate(board.deadline, true)}
+            </div>
           )}
         </div>
         <Button variant="outline" size="sm" onClick={() => setIsAddingColumn(true)}>

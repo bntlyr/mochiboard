@@ -6,6 +6,8 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { ProjectsView } from "@/components/projects-view"
 import { ProjectView } from "@/components/project-view"
 import type { KanbanBoard, MochiProject } from "@/types"
+// Import the DeadlineReminder component
+import { DeadlineReminder } from "@/components/deadline-reminder"
 
 export default function Dashboard() {
   const [user, setUser] = useState<{ name?: string; email: string } | null>(null)
@@ -47,6 +49,8 @@ export default function Dashboard() {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Loading...</div>
   }
 
+  // Add the DeadlineReminder component to the return statement
+  // Add it right before the closing </div> of the main container
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <DashboardHeader user={user} />
@@ -59,6 +63,7 @@ export default function Dashboard() {
           )}
         </main>
       </div>
+      <DeadlineReminder />
     </div>
   )
 }
